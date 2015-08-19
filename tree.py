@@ -102,6 +102,14 @@ class BinaryTree:
         return t
 
     def delete(self, node):
+        if node == "random node":
+            try:
+                node = self.root.right
+            except:
+                try:
+                    node = self.root.left
+                except:
+                    node = self.root
         if node.left is None:
             self.transplant(node, node.right)
         elif node.right is None:
@@ -112,7 +120,7 @@ class BinaryTree:
                 self.transplant(succ, succ.right)
                 succ.right = node.right
                 succ.right.p = succ
-            self.transplat(node, succ)
+            self.transplant(node, succ)
             succ.left = node.left
             succ.left.p = succ
 
@@ -144,8 +152,12 @@ def simple_max(vals):
 
 def run_blt(vals, k):
     blt = BinaryTree()
-    for val in vals:
-        blt.insert(val, 0)
+    for i in range(k):
+        blt.insert(vals[i], 0)
+    for i in range(k, len(vals)):
+        blt.delete("random node")
+        blt.insert(vals[i], 0)
+
 
 if __name__ == "__main__":
     blt = BinaryTree()

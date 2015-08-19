@@ -6,6 +6,7 @@
 # 4) calculate for k + 1
 
 import collections
+#TODO: functions will break if k < len(vals)
 def fifo(vals, k):
     retList = []*(len(vals)-k)
     maxVal = 0
@@ -14,9 +15,10 @@ def fifo(vals, k):
     window = collections.deque(k*[0], k)
     for i in range(0, k):
         window.appendleft(vals[i])
-    retList.append(max(window))
+    maxVal = max(window)
+    retList.append(maxVal)
 
-    for i in range(i+1, len(vals)):
+    for i in range(k, len(vals)):
         lastVal = window[-1]
         window.appendleft(vals[i])
         if vals[i] > maxVal:
@@ -26,6 +28,8 @@ def fifo(vals, k):
             # if we lost the old maxVal, find max()
             maxVal = max(window)
         retList.append(maxVal)
+    # print(retList)
+    # print("len(retList):" + str(len(retList)))
     return retList
 
 
@@ -58,6 +62,17 @@ def list_slice(nums, k):
         # assert(len(newlist) == k)
         # print(max(newlist))
         #print(str(newlist))
+    # print(retList)
+    # print("len(retList):" + str(len(retList)))
+    return retList
+
+
+def map_slice(nums, k):
+    retList = []
+    for i in range(len(nums)):
+        if i+k > len(nums):
+            break
+        retList.append(map(lambda x: max(x), nums[i:i+k]))
 
 def mymax(mylist):
     return max(mylist)
@@ -71,37 +86,132 @@ def simple_max(vals):
     return max(vals)
 
 
+def double_deck(vals, k):
+    retList = []*(len(vals)-k)
+    i = 0
+    #TODO: does not work for negative value lists
+    maxVal = collections.deque()
+    maxIdx = collections.deque()
+
+    maxVal.append(vals[0])
+    maxIdx.append(0)
+    for i in range(1, k):
+        # if maxIdx[0] ==
+        if vals[i] > maxVal[-1]:
+            maxVal.append(vals[i])
+            maxIdx.append(i)
+
+    retList.append(maxVal[-1])
+    for i in range(k, len(vals)):
+        try:
+            if maxIdx[0] == i - k:
+                maxIdx.popleft()
+                maxVal.popleft()
+        except:
+            pass
+        try:
+            if vals[i] > maxVal[-1]:
+                maxVal.append(vals[i])
+                maxIdx.append(i)
+        except IndexError:
+            maxVal.append(vals[i])
+            maxIdx.append(i)
+        retList.append(maxVal[-1])
+    for i in range(0, len(maxVal)):
+        # print(maxVal[i])
+        # print(maxIdx[i])
+        pass
+    # print(retList)
+    # print("len(retList):" + str(len(retList)))
+    return retList
+
+def single_deck(vals, k):
+    # print(vals)
+    # print(str(k))
+    retList = []*(len(vals)-k)
+    i = 0
+    #TODO: does not work for negative value lists
+    maxVal = collections.deque()
+
+    maxVal.append({"idx": 0, "val": vals[0]})
+    # print(maxVal[0].keys())
+    for i in range(1, k):
+        if vals[i] > maxVal[-1]["val"]:
+            maxVal.append({"idx": i, "val": vals[i]})
+
+    retList.append(maxVal[-1]["val"])
+    # print("current retList:")
+    # print(retList)
+    for i in range(k, len(vals)):
+        if maxVal[0]["idx"] == i - k:
+            maxVal.popleft()
+        try:
+            if vals[i] > maxVal[-1]["val"]:
+                maxVal.append({"idx": i, "val": vals[i]})
+        except IndexError:
+            # basically, if deque is empty
+            maxVal.append({"idx": i, "val": vals[i]})
+        retList.append(maxVal[-1]["val"])
+        # print(retList)
+    # print("final retList:")
+    # print(retList)
+    # print("len(retList):" + str(len(retList)))
+    return retList
+
+from itertools import islice
+def islice_method(vals, k):
+    retList = []*(len(vals)-k)
+    slices = zip(*(islice(vals, i, None) for i in range(k)))
+    for slice_ in slices:
+        retList.append(max(slice_))
+    return retList
+
+
 if __name__ == "__main__":
-    # nums = [ 8, 5, 10, 7, 9, 4, 15, 12, 90, 13]
-    # fmiw(nums, 3)
-    # print(map(mylist, nums))
-
-    k = 3
-    myFIFO = WrapFIFO(k)
-
-    vals = [10, 0, 1, 3, 6, 9, 2, 4, 6, 8, 10]
-    for val in vals:
-        myFIFO.append(val)
-        # print(str(myFIFO.getMax()))
-
-    # newList = window_iter(3, vals)
-    # print(newList)
-
-
-    from timeit import Timer
-
+    import sys
     import random
-    vals = random.sample(range(10000), 10000)
+    try:
+        if sys.argv[1] == "test" or sys.argv[1] == "t":
+            k = 5
+            vals = random.sample(range(30), 30)
+            print("vals:")
+            print(vals)
+            print("fifo:")
+            print(fifo(vals, k))
+            print("double_deck:")
+            print(double_deck(vals, k))
+            print("islice_method:")
+            print(islice_method(vals, k))
 
-    k = 8
-    t0 = Timer(lambda: simple_max(vals))
-    t1 = Timer(lambda: fifo(vals, k))
-    t2 = Timer(lambda: list_slice(vals, 3))
+        if sys.argv[1] == "speed" or sys.argv[1] == "s":
+            from timeit import Timer
+            vals = random.sample(range(1000000), 1000000)
+            for i in range(1, 4):
+                k = 40*i
+                print("_________ k = {0} ________".format(k))
+                t0 = Timer(lambda: simple_max(vals))
+                t1 = Timer(lambda: fifo(vals, k))
+                t2 = Timer(lambda: list_slice(vals, k))
+                t3 = Timer(lambda: double_deck(vals, k))
+                t4 = Timer(lambda: single_deck(vals, k))
+                t5 = Timer(lambda: islice_method(vals, k))
 
-    _NUMBER = 1000
-    print("{0} simple_max: {1}".format(_NUMBER, t0.timeit(number=_NUMBER)))
-    print("{0} fifo: {1}".format(_NUMBER, t1.timeit(number=_NUMBER)))
-    print("{0} list_slice: {1}".format(_NUMBER, t2.timeit(number=_NUMBER)))
+                _RUNS = 1
+                print("{0} simple_max: {1}".format(_RUNS, t0.timeit(number=_RUNS)))
+                print("{0} fifo: {1}".format(_RUNS, t1.timeit(number=_RUNS)))
+                print("{0} list_slice: {1}".format(_RUNS, t2.timeit(number=_RUNS)))
+                print("{0} double_deck: {1}".format(_RUNS, t3.timeit(number=_RUNS)))
+                print("{0} single_deck: {1}".format(_RUNS, t4.timeit(number=_RUNS)))
+                print("{0} islice_method: {1}".format(_RUNS, t5.timeit(number=_RUNS)))
+    except IndexError:
+        print("To test accurracy, pass argument 't' or 'test'")
+        print("To test speed, pass argument 's' or 'speed'")
+        print("Examples:")
+        print("python listcalc.py t")
+        print("python listcalc.py s")
+
+
+
 
 
 
